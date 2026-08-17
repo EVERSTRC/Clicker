@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abridor en Bucle</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: 0 auto; }
+    input, button { padding: 12px; margin: 8px 0; width: 100%; box-sizing: border-box; font-size: 16px; }
+    button { cursor: pointer; font-weight: bold; background-color: #0056b3; color: white; border: none; border-radius: 6px; }
+    button:disabled { background-color: #cccccc; cursor: not-allowed; }
+    #estado { margin-top: 15px; font-weight: bold; color: #0056b3; }
+  </style>
+</head>
+<body>
+  <h2>Abridor de URL (1 Pestaña Reutilizable)</h2>
+
+  <label for="url">Ingresa la URL:</label>
+  <input type="text" id="url" placeholder="https://ejemplo.com">
+
+  <button id="btnIniciar" onclick="iniciar()">Iniciar Bucle (1-3 min)</button>
+  <button id="btnDetener" onclick="detener()" disabled>Detener</button>
+
+  <p id="estado"></p>
+
+  <script>
+    let temporizador = null;
+
+    // Tono de sonido sintetizado sin depender de archivos de audio externos
+    function reproducirSonido() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Nota Re5 (D5)
+        
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+      } catch (e) {
+        console.warn('Audio no soportado o bloqueado por el navegador.');
+      }
+    }
+
+    // Notificación del sistema
+    function enviarNotificacion(mensaje) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Abridor de URL', {
+          body: mensaje,
+          icon: 'https://via.placeholder.com/192'
+        });
+      }
+    }
+
+    function abrirYProgramar() {
+      const inputUrl = document.getElementById('url').value.trim();
+      let link = inputUrl.startsWith('http') ? inputUrl : 'https://' + inputUrl;
+
+      window.open(link, 'VentanaUnica');
+
+      reproducirSonido();
+
+      const tiempoAzarMs = Math.floor(Math.random() * (180000 - 60000 + 1)) + 60000;
+      const segundos = Math.round(tiempoAzarMs / 1000);
+      const textoEstado = `Pestaña actualizada. Próxima recarga en ${segundos}s (~${(segundos/60).toFixed(1)} min).`;
+
+      document.getElementById('estado').innerText = textoEstado;
+      enviarNotificacion(textoEstado);
+
+      temporizador = setTimeout(abrirYProgramar, tiempoAzarMs);
+    }
+
+    function iniciar() {
+      const inputUrl = document.getElementById('url').value.trim();
+      if (!inputUrl) {
+        alert('Por favor ingresa una URL.');
+        return;
+      }
+
+      // Solicitar permiso de notificaciones al iniciar
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+
+      document.getElementById('btnIniciar').disabled = true;
+      document.getElementById('btnDetener').disabled = false;
+      abrirYProgramar();
+    }
+
+    function detener() {
+      clearTimeout(temporizador);
+      document.getElementById('btnIniciar').disabled = false;
+      document.getElementById('btnDetener').disabled = true;
+      document.getElementById('estado').innerText = 'Proceso detenido.';
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('PWA lista para instalar.'))
+        .catch(err => console.error('Error al registrar SW:', err));
+    }
+  </script>
+</body>
+</html>

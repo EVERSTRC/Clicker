@@ -3,31 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
   <title>Abridor en Bucle</title>
   <link rel="manifest" href="manifest.json">
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: 0 auto; }
     input, button { padding: 12px; margin: 8px 0; width: 100%; box-sizing: border-box; font-size: 16px; }
+    .input-container { position: relative; width: 100%; }
+    .btn-limpiar {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: auto;
+      padding: 4px 10px;
+      margin: 0;
+      background-color: #999999;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .btn-limpiar:hover { background-color: #666666; }
     button { cursor: pointer; font-weight: bold; background-color: #0056b3; color: white; border: none; border-radius: 6px; }
     button:disabled { background-color: #cccccc; cursor: not-allowed; }
     #estado { margin-top: 15px; font-weight: bold; color: #0056b3; }
+    #contador { margin-top: 10px; font-weight: bold; color: #28a745; font-size: 18px; }
   </style>
 </head>
 <body>
   <h2>Abridor de URL (1 Pestaña Reutilizable)</h2>
 
   <label for="url">Ingresa la URL:</label>
-  <input type="text" id="url" placeholder="https://ejemplo.com">
+  <div class="input-container">
+    <input type="text" id="url" placeholder="https://ejemplo.com">
+    <button type="button" class="btn-limpiar" onclick="limpiarUrl()">Limpiar</button>
+  </div>
 
   <button id="btnIniciar" onclick="iniciar()">Iniciar Bucle (1-3 min)</button>
   <button id="btnDetener" onclick="detener()" disabled>Detener</button>
 
+  <p id="contador">URLs/Pestañas abiertas: 0</p>
   <p id="estado"></p>
 
   <script>
     let temporizador = null;
+    let totalAbiertas = 0;
 
-    // Tono de sonido sintetizado sin depender de archivos de audio externos
     function reproducirSonido() {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -35,7 +58,7 @@
         const gain = audioCtx.createGain();
 
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Nota Re5 (D5)
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
         
         gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
@@ -50,7 +73,6 @@
       }
     }
 
-    // Notificación del sistema
     function enviarNotificacion(mensaje) {
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('Abridor de URL', {
@@ -60,11 +82,19 @@
       }
     }
 
+    function limpiarUrl() {
+      document.getElementById('url').value = '';
+      document.getElementById('url').focus();
+    }
+
     function abrirYProgramar() {
       const inputUrl = document.getElementById('url').value.trim();
       let link = inputUrl.startsWith('http') ? inputUrl : 'https://' + inputUrl;
 
-      window.open(link, 'VentanaUnica');
+      window.open(link, 'VentanaUnica', 'noopener,noreferrer');
+
+      totalAbiertas++;
+      document.getElementById('contador').innerText = `URLs/Pestañas abiertas: ${totalAbiertas}`;
 
       reproducirSonido();
 
@@ -85,7 +115,6 @@
         return;
       }
 
-      // Solicitar permiso de notificaciones al iniciar
       if ('Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission();
       }

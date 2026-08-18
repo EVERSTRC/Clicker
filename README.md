@@ -1,14 +1,9 @@
-# Abridor de URL en Bucle (PWA)
+# Abridor de URL en Bucle (PWA + Anti-Indexación)
 
-Aplicación Web Progresiva (PWA) para abrir y refrescar automáticamente una URL en un intervalo aleatorio de 1 a 3 minutos utilizando una única pestaña reutilizable. Incluye notificaciones locales y alerta sonora en cada recarga.
+Aplicación Web Progresiva (PWA) con contador de aperturas, botón para limpiar campo de entrada, anonimización mediante `noopener,noreferrer` y etiquetas anti-indexación para buscadores.
 
 ## Archivos del Proyecto
-- `index.html`: Estructura, interfaz, audio y lógica del temporizador.
-- `manifest.json`: Configuración de la PWA para instalación.
-- `sw.js`: Service Worker para registro de la app.
-
-## Instalación desde GitHub Pages
-1. Sube estos archivos a la raíz de tu repositorio en GitHub.
-2. Ve a **Settings** > **Pages**.
-3. En **Branch**, selecciona `main` o `master` y guarda.
-4. Abre la URL generada en tu dispositivo y selecciona **Instalar** o **Agregar a la pantalla principal**.
+- `index.html`: Aplicación principal.
+- `manifest.json`: Archivo de configuración PWA.
+- `sw.js`: Service Worker.
+- `robots.txt`: Instrucciones para bloquear rastreadores de buscadores.
